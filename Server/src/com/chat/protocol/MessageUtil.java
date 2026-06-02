@@ -6,6 +6,6 @@ public class MessageUtil {
     }
 
     public static String[] decode(String message) {
-        return message.split(ProtocolConst.SEPARATOR, 2);
+        return message.split("\\|", 2);
     }
 }

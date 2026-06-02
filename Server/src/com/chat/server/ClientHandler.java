@@ -3,11 +3,9 @@ package com.chat.server;
 import java.io.*;
 import java.net.Socket;
 import com.chat.protocol.*;
-import com.chat.protocol.MessageUtil;
-import com.chat.protocol.MessageType;
-import java.io.*;
 import javax.swing.SwingUtilities;
-
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ClientHandler extends Thread {
     private Socket socket;
@@ -46,17 +44,23 @@ public class ClientHandler extends Thread {
                 close();
                 return;
             }
+
             this.nickname = reqNickname;
+            sendMessage(MessageType.SYS, "登录成功");
+
             // 刷新服务器用户列表
-            javax.swing.SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() -> {
                 String[] users = userManager.getAllNicknames();
                 gui.updateUserList(users);
             });
+
             // 广播上线通知
-            String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 进入了聊天室");
+            String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+            String sysMsgContent = String.format("【%s,%s】：【进入了群聊室】", timestamp, nickname);
+            String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
             patrolThread.addMessage(sysMsg);
-            gui.appendLog("用户 " + nickname + " 加入聊天室");
-            // 之后循环读取消息
+
+            // 循环读取消息
             String line;
             while ((line = reader.readLine()) != null) {
                 parts = MessageUtil.decode(line);
@@ -64,10 +68,11 @@ public class ClientHandler extends Thread {
                 String type = parts[0];
                 String content = parts[1];
                 if (MessageType.MSG.equals(type)) {
-                    String broadcastContent = nickname + ": " + content;
+                    timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                    String broadcastContent = String.format("【%s,%s】：%s", timestamp, nickname, content);
                     String broadcastMsg = MessageUtil.encode(MessageType.MSG, broadcastContent);
                     patrolThread.addMessage(broadcastMsg);
-                }else if (MessageType.QUIT.equals(type)) {
+                } else if (MessageType.QUIT.equals(type)) {
                     break;
                 }
             }
@@ -76,10 +81,11 @@ public class ClientHandler extends Thread {
         } finally {
             close();
             if (nickname != null) {
-                String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 退出了聊天室");
+                String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+                String sysMsgContent = String.format("【%s,%s】：【离开了群聊室】", timestamp, nickname);
+                String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
                 patrolThread.addMessage(sysMsg);
                 userManager.removeUser(nickname);
-                // 刷新在线列表
                 SwingUtilities.invokeLater(() -> {
                     String[] users = userManager.getAllNicknames();
                     gui.updateUserList(users);
@@ -107,8 +113,10 @@ public class ClientHandler extends Thread {
             writer.println(raw);
         }
     }
+
     public boolean isSocketAlive() {
         return socket != null && !socket.isClosed() && socket.isConnected();
     }
+
     public String getNickname() { return nickname; }
 }

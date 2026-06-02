@@ -15,6 +15,16 @@ public class ClientController {
         this.gui = gui;
     }
 
+    public void loginFailed() {
+        gui.appendChat("登录失败，请检查昵称或服务器设置");
+        disconnect();
+    }
+
+    public void loginSuccess() {
+        gui.setLoggedIn(true);
+        // 删除了 gui.appendChat("登录成功！");
+    }
+
     public void login() {
         String ip = gui.getServerIp();
         int port = gui.getPort();
@@ -26,14 +36,17 @@ public class ClientController {
         try {
             socket = new Socket(ip, port);
             writer = new PrintWriter(socket.getOutputStream(), true);
-            // 发送登录消息
-            writer.println(MessageUtil.encode(MessageType.LOGIN, nickname));
-            // 启动接收线程
-            receiveThread = new ReceiveThread(socket, gui);
+
+            receiveThread = new ReceiveThread(socket, gui, this);
             receiveThread.start();
+
+            String loginMsg = MessageUtil.encode(MessageType.LOGIN, nickname);
+            writer.println(loginMsg);
+            writer.flush();
+
             this.nickname = nickname;
-            gui.setLoggedIn(true);
-            gui.appendChat("已连接到服务器，正在登录...");
+            // 删除了 gui.appendChat("正在登录...");
+
         } catch (IOException e) {
             gui.appendChat("连接服务器失败：" + e.getMessage());
         }

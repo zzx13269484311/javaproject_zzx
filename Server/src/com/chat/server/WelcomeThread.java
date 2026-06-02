@@ -22,7 +22,7 @@ public class WelcomeThread extends Thread {
         try {
             while (!isInterrupted()) {
                 Socket socket = serverSocket.accept();
-                gui.appendLog("新客户端连接：" + socket.getInetAddress());
+                // 删除：gui.appendLog("新客户端连接：" + socket.getInetAddress());
                 ClientHandler handler = new ClientHandler(socket, userManager, gui, patrolThread);
                 handler.start();
             }

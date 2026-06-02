@@ -4,6 +4,8 @@ import com.chat.protocol.MessageType;
 import com.chat.protocol.MessageUtil;
 import java.net.ServerSocket;
 import java.io.IOException;
+import java.text.SimpleDateFormat;   // 新增
+import java.util.Date;               // 新增
 
 public class ServerController {
     private ServerGUI gui;
@@ -31,7 +33,7 @@ public class ServerController {
             patrolThread.start();
             welcomeThread = new WelcomeThread(serverSocket, userManager, gui, patrolThread);
             welcomeThread.start();
-            gui.appendLog("服务器已启动，监听端口：" + port);
+            // 删除：gui.appendLog("服务器已启动，监听端口：" + port);
             gui.setStartEnabled(false);
         } catch (IOException e) {
             gui.appendLog("启动失败：" + e.getMessage());
@@ -84,7 +86,9 @@ public class ServerController {
         // 刷新在线列表
         gui.updateUserList(userManager.getAllNicknames());
         // 广播系统消息
-        String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 被管理员踢出聊天室");
+        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        String sysMsgContent = String.format("【%s,%s】：【因违规被踢出群聊室】", timestamp, nickname);
+        String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
         patrolThread.addMessage(sysMsg);
         gui.appendLog("管理员踢出了用户：" + nickname);
         gui.clearKickField();

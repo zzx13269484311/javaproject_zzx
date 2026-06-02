@@ -60,6 +60,8 @@ public class ServerGUI extends JFrame {
         userPanel.setBorder(BorderFactory.createTitledBorder("聊客列表"));
         userListModel = new DefaultListModel<>();
         userList = new JList<>(userListModel);
+        userList.setLayoutOrientation(JList.HORIZONTAL_WRAP);  // 水平排列
+        userList.setVisibleRowCount(-1);                       // 显示所有行，不限制
         JScrollPane userScroll = new JScrollPane(userList);
         userScroll.setPreferredSize(new Dimension(180, 40)); // 宽180，高120
         userPanel.add(userScroll, BorderLayout.CENTER);

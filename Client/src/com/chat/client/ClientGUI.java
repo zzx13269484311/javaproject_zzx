@@ -82,12 +82,14 @@ public class ClientGUI extends JFrame {
     }
 
     public void setLoggedIn(boolean loggedIn) {
-        enterBtn.setEnabled(!loggedIn);
-        exitBtn.setEnabled(loggedIn);
-        sendBtn.setEnabled(loggedIn);
-        ipField.setEnabled(!loggedIn);
-        portField.setEnabled(!loggedIn);
-        nicknameField.setEnabled(!loggedIn);
+        SwingUtilities.invokeLater(() -> {
+            enterBtn.setEnabled(!loggedIn);
+            exitBtn.setEnabled(loggedIn);
+            sendBtn.setEnabled(loggedIn);
+            ipField.setEnabled(!loggedIn);
+            portField.setEnabled(!loggedIn);
+            nicknameField.setEnabled(!loggedIn);
+        });
     }
 
     public String getServerIp() { return ipField.getText().trim(); }

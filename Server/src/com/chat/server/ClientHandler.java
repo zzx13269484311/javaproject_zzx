@@ -15,11 +15,13 @@ public class ClientHandler extends Thread {
     private String nickname;
     private BufferedReader reader;
     private PrintWriter writer;
+    private PatrolThread patrolThread;
 
-    public ClientHandler(Socket socket, UserManager userManager, ServerGUI gui) {
+    public ClientHandler(Socket socket, UserManager userManager, ServerGUI gui, PatrolThread patrolThread) {
         this.socket = socket;
         this.userManager = userManager;
         this.gui = gui;
+        this.patrolThread = patrolThread;
     }
 
     @Override
@@ -44,8 +46,15 @@ public class ClientHandler extends Thread {
                 return;
             }
             this.nickname = reqNickname;
+            // 刷新服务器用户列表
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                String[] users = userManager.getAllNicknames();
+                gui.updateUserList(users);
+            });
+            // 广播上线通知
+            String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 进入了聊天室");
+            patrolThread.addMessage(sysMsg);
             gui.appendLog("用户 " + nickname + " 加入聊天室");
-            // 广播上线通知（后续巡检线程负责，暂时先不做）
             // 之后循环读取消息
             String line;
             while ((line = reader.readLine()) != null) {
@@ -54,9 +63,10 @@ public class ClientHandler extends Thread {
                 String type = parts[0];
                 String content = parts[1];
                 if (MessageType.MSG.equals(type)) {
-                    // 暂时只打印，后续放入队列广播
-                    gui.appendLog(nickname + " 说: " + content);
-                } else if (MessageType.QUIT.equals(type)) {
+                    String broadcastContent = nickname + ": " + content;
+                    String broadcastMsg = MessageUtil.encode(MessageType.MSG, broadcastContent);
+                    patrolThread.addMessage(broadcastMsg);
+                }else if (MessageType.QUIT.equals(type)) {
                     break;
                 }
             }
@@ -65,8 +75,9 @@ public class ClientHandler extends Thread {
         } finally {
             close();
             if (nickname != null) {
+                String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 退出了聊天室");
+                patrolThread.addMessage(sysMsg);
                 userManager.removeUser(nickname);
-                gui.appendLog("用户 " + nickname + " 已退出");
             }
             // 广播下线通知（后续实现）
         }
@@ -84,5 +95,11 @@ public class ClientHandler extends Thread {
             if (writer != null) writer.close();
             if (socket != null) socket.close();
         } catch (IOException e) { /* ignore */ }
+    }
+
+    public void sendRawMessage(String raw) {
+        if (writer != null) {
+            writer.println(raw);
+        }
     }
 }

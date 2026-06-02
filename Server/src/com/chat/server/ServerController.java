@@ -25,10 +25,10 @@ public class ServerController {
         try {
             serverSocket = new ServerSocket(port);
             isRunning = true;
-            welcomeThread = new WelcomeThread(serverSocket, userManager, gui);
-            welcomeThread.start();
             patrolThread = new PatrolThread(userManager, gui);
             patrolThread.start();
+            welcomeThread = new WelcomeThread(serverSocket, userManager, gui, patrolThread);
+            welcomeThread.start();
             gui.appendLog("服务器已启动，监听端口：" + port);
             gui.setStartEnabled(false);
         } catch (IOException e) {
@@ -50,6 +50,11 @@ public class ServerController {
         // 断开所有客户端连接（稍后实现）
         gui.appendLog("服务器已停止");
         gui.setStartEnabled(true);
+    }
+
+    public void refreshUserList() {
+        String[] users = userManager.getAllNicknames();
+        gui.updateUserList(users);
     }
 
     public void kickUser() {

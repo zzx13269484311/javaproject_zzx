@@ -15,9 +15,6 @@ public class UserManager {
         users.remove(nickname);
     }
 
-    public boolean isNicknameExist(String nickname){
-        return users.containsKey(nickname);
-    }
 
     public ClientHandler getHandler(String nickname){
         return users.get(nickname);

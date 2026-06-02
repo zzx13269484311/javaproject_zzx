@@ -1,11 +1,12 @@
 package com.chat.server;
+
 import com.chat.protocol.ProtocolConst;
 import com.chat.protocol.MessageType;
 import com.chat.protocol.MessageUtil;
 import java.net.ServerSocket;
 import java.io.IOException;
-import java.text.SimpleDateFormat;   // 新增
-import java.util.Date;               // 新增
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.JOptionPane;
 
 public class ServerController {
@@ -34,10 +35,10 @@ public class ServerController {
             patrolThread.start();
             welcomeThread = new WelcomeThread(serverSocket, userManager, gui, patrolThread);
             welcomeThread.start();
-            // 删除：gui.appendLog("服务器已启动，监听端口：" + port);
+
             gui.setStartEnabled(false);
             gui.setStartEnabled(false);
-            // 弹出提示窗口
+
             JOptionPane.showMessageDialog(gui, "服务已启动，可以接入客户端连接了", "消息", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             gui.appendLog("启动失败：" + e.getMessage());
@@ -46,30 +47,26 @@ public class ServerController {
 
     public void stopServer() {
         isRunning = false;
-        // 广播服务器关闭消息
+
         String shutdownMsg = MessageUtil.encode(MessageType.SYS, "服务器已关闭，连接将断开");
         for (ClientHandler handler : userManager.getAllHandlers()) {
             handler.sendRawMessage(shutdownMsg);
             handler.close();
         }
-        userManager.getAllNicknames(); // 清空（如果需要）
-        // 关闭 ServerSocket
+        userManager.getAllNicknames();
+
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();
             } catch (IOException e) { /* ignore */ }
         }
-        // 中断线程
+
         if (welcomeThread != null) welcomeThread.interrupt();
         if (patrolThread != null) patrolThread.interrupt();
         gui.appendLog("服务器已停止");
         gui.setStartEnabled(true);
     }
 
-    public void refreshUserList() {
-        String[] users = userManager.getAllNicknames();
-        gui.updateUserList(users);
-    }
 
     public void kickUser() {
         String nickname = gui.getKickNickname();
@@ -82,7 +79,7 @@ public class ServerController {
             JOptionPane.showMessageDialog(gui, "要踢出的聊客不存在", "消息", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        // 发送被踢通知
+
         handler.sendMessage(MessageType.KICK, "您已被管理员踢出聊天室");
         handler.setKicked(true);
         handler.close();
@@ -95,7 +92,7 @@ public class ServerController {
         patrolThread.addMessage(sysMsg);
         gui.clearKickField();
 
-        // 成功踢出后弹窗
+
         JOptionPane.showMessageDialog(gui, "违规聊客已踢出", "消息", JOptionPane.INFORMATION_MESSAGE);
     }
 

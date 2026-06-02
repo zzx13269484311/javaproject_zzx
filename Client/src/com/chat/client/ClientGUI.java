@@ -76,7 +76,6 @@ public class ClientGUI extends JFrame {
         sendBtn.addActionListener(e -> controller.sendMessage(msgField.getText().trim()));
     }
 
-    // 供 Controller 调用的方法
     public void appendChat(String msg) {
         SwingUtilities.invokeLater(() -> chatArea.append(msg + "\n"));
     }

@@ -34,7 +34,6 @@ public class ClientHandler extends Thread {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new PrintWriter(socket.getOutputStream(), true);
 
-            // 读取第一条消息（必须是 LOGIN）
             String firstLine = reader.readLine();
             if (firstLine == null) return;
             String[] parts = MessageUtil.decode(firstLine);
@@ -53,19 +52,16 @@ public class ClientHandler extends Thread {
             this.nickname = reqNickname;
             sendMessage(MessageType.SYS, "登录成功");
 
-            // 刷新服务器用户列表
             SwingUtilities.invokeLater(() -> {
                 String[] users = userManager.getAllNicknames();
                 gui.updateUserList(users);
             });
 
-            // 广播上线通知
             String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
             String sysMsgContent = String.format("【%s,%s】：【进入了群聊室】", timestamp, nickname);
             String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
             patrolThread.addMessage(sysMsg);
 
-            // 循环读取消息
             String line;
             while ((line = reader.readLine()) != null) {
                 parts = MessageUtil.decode(line);

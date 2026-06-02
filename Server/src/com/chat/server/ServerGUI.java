@@ -15,7 +15,7 @@ public class ServerGUI extends JFrame {
     private DefaultListModel<String> userListModel;
     private JList<String> userList;
 
-    private ServerController controller;  // 后续实现控制器
+    private ServerController controller;
 
     public ServerGUI() {
         initUI();
@@ -87,11 +87,11 @@ public class ServerGUI extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
 
 
-        // 按钮事件（暂用匿名类，后续转移到 Controller）
+        // 按钮事件
         startBtn.addActionListener(e -> controller.startServer());
         stopBtn.addActionListener(e -> controller.stopServer());
         kickBtn.addActionListener(e -> controller.kickUser());
-        // 事件绑定
+
         sendBtn.addActionListener(e -> {
             String msg = inputField.getText().trim();
             if (!msg.isEmpty()) {
@@ -100,7 +100,6 @@ public class ServerGUI extends JFrame {
         });
     }
 
-    // 供 Controller 调用的界面更新方法
     public void appendLog(String msg) {
         SwingUtilities.invokeLater(() -> logArea.append(msg + "\n"));
     }

@@ -40,7 +40,7 @@ public class ClientController {
         int port = gui.getPort();
         String nickname = gui.getNickname().trim();   // 先去除前后空格
 
-        // 1. 昵称合法性检查（空字符串 或 等于"管理员"）
+        // 昵称合法性检查（空字符串 或 等于"管理员"）
         if (nickname.isEmpty() || "管理员".equals(nickname)) {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(gui,
@@ -51,7 +51,7 @@ public class ClientController {
             return;
         }
 
-        // 2. IP 和端口合法性检查
+        //  IP 和端口合法性检查
         if (ip.isEmpty() || port < 1024 || port > 65535) {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(gui,
@@ -62,7 +62,7 @@ public class ClientController {
             return;
         }
 
-        // 3. 连接服务器
+        // 连接服务器
         try {
             socket = new Socket(ip, port);
             writer = new PrintWriter(socket.getOutputStream(), true);

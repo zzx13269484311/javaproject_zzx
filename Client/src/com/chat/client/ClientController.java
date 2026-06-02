@@ -3,6 +3,8 @@ package com.chat.client;
 import com.chat.protocol.*;
 import java.io.*;
 import java.net.Socket;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 public class ClientController {
     private ClientGUI gui;
@@ -57,6 +59,9 @@ public class ClientController {
             writer.println(MessageUtil.encode(MessageType.QUIT, ""));
         }
         disconnect();
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(gui, "您已经离开聊天室", "消息", JOptionPane.INFORMATION_MESSAGE);
+        });
     }
 
     public void sendMessage(String content) {
@@ -72,6 +77,5 @@ public class ClientController {
         } catch (IOException e) { /* ignore */ }
         if (receiveThread != null) receiveThread.interrupt();
         gui.setLoggedIn(false);
-        gui.appendChat("已断开连接");
     }
 }

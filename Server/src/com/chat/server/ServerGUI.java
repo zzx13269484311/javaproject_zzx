@@ -90,7 +90,13 @@ public class ServerGUI extends JFrame {
         startBtn.addActionListener(e -> controller.startServer());
         stopBtn.addActionListener(e -> controller.stopServer());
         kickBtn.addActionListener(e -> controller.kickUser());
-
+        // 事件绑定
+        sendBtn.addActionListener(e -> {
+            String msg = inputField.getText().trim();
+            if (!msg.isEmpty()) {
+                controller.sendAdminMessage(msg);
+            }
+        });
     }
 
     // 供 Controller 调用的界面更新方法
@@ -128,5 +134,9 @@ public class ServerGUI extends JFrame {
 
     public void clearKickField() {
         kickField.setText("");
+    }
+
+    public void clearInputField() {
+        SwingUtilities.invokeLater(() -> inputField.setText(""));
     }
 }

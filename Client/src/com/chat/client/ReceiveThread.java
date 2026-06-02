@@ -43,7 +43,7 @@ public class ReceiveThread extends Thread {
                     gui.appendChat(content);
                 } else if (MessageType.KICK.equals(type)) {
                     gui.appendChat("系统通知：" + content);
-                    controller.loginFailed();
+                    controller.disconnect();
                     break;
                 }
             }

@@ -81,6 +81,7 @@ public class ServerController {
         // 发送被踢通知
         handler.sendMessage(MessageType.KICK, "您已被管理员踢出聊天室");
         // 关闭连接并清理资源（handler 内部会关闭 socket 并移除用户）
+        handler.setKicked(true);
         handler.close();
         userManager.removeUser(nickname);
         // 刷新在线列表
@@ -90,7 +91,17 @@ public class ServerController {
         String sysMsgContent = String.format("【%s,%s】：【因违规被踢出群聊室】", timestamp, nickname);
         String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
         patrolThread.addMessage(sysMsg);
-        gui.appendLog("管理员踢出了用户：" + nickname);
         gui.clearKickField();
+    }
+
+    public void sendAdminMessage(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return;
+        }
+        String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        String formattedMsg = String.format("【%s,管理员】：%s", timestamp, content);
+        String encodedMsg = MessageUtil.encode(MessageType.SYS, formattedMsg);
+        patrolThread.addMessage(encodedMsg);
+        gui.clearInputField();
     }
 }

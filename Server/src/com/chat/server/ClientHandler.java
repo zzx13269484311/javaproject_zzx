@@ -15,12 +15,17 @@ public class ClientHandler extends Thread {
     private BufferedReader reader;
     private PrintWriter writer;
     private PatrolThread patrolThread;
+    private boolean isKicked = false;
 
     public ClientHandler(Socket socket, UserManager userManager, ServerGUI gui, PatrolThread patrolThread) {
         this.socket = socket;
         this.userManager = userManager;
         this.gui = gui;
         this.patrolThread = patrolThread;
+    }
+
+    public void setKicked(boolean kicked){
+        this.isKicked = kicked;
     }
 
     @Override
@@ -80,7 +85,7 @@ public class ClientHandler extends Thread {
             gui.appendLog("客户端 " + nickname + " 连接异常: " + e.getMessage());
         } finally {
             close();
-            if (nickname != null) {
+            if (nickname != null && !isKicked) {  // 仅当未被踢时广播离开消息
                 String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
                 String sysMsgContent = String.format("【%s,%s】：【离开了群聊室】", timestamp, nickname);
                 String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);

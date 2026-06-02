@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.io.IOException;
 import java.text.SimpleDateFormat;   // 新增
 import java.util.Date;               // 新增
+import javax.swing.JOptionPane;
 
 public class ServerController {
     private ServerGUI gui;
@@ -35,6 +36,9 @@ public class ServerController {
             welcomeThread.start();
             // 删除：gui.appendLog("服务器已启动，监听端口：" + port);
             gui.setStartEnabled(false);
+            gui.setStartEnabled(false);
+            // 弹出提示窗口
+            JOptionPane.showMessageDialog(gui, "服务已启动，可以接入客户端连接了", "消息", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             gui.appendLog("启动失败：" + e.getMessage());
         }
@@ -69,17 +73,13 @@ public class ServerController {
 
     public void kickUser() {
         String nickname = gui.getKickNickname();
-        if (nickname == null || nickname.trim().isEmpty()) {
-            gui.appendLog("踢人失败：昵称不能为空");
-            return;
-        }
-        if ("暂无聊客".equals(nickname)) {
-            gui.appendLog("踢人失败：当前没有在线用户");
+        if (nickname == null || nickname.trim(). isEmpty()) {
+            JOptionPane.showMessageDialog(gui, "要踢出的聊客不存在", "消息", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         ClientHandler handler = userManager.getHandler(nickname);
         if (handler == null) {
-            gui.appendLog("踢人失败：用户 " + nickname + " 不在线");
+            JOptionPane.showMessageDialog(gui, "要踢出的聊客不存在", "消息", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         // 发送被踢通知
@@ -94,6 +94,9 @@ public class ServerController {
         String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);
         patrolThread.addMessage(sysMsg);
         gui.clearKickField();
+
+        // 成功踢出后弹窗
+        JOptionPane.showMessageDialog(gui, "违规聊客已踢出", "消息", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void sendAdminMessage(String content) {

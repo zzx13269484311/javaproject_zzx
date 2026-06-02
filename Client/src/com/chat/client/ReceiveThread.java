@@ -3,6 +3,8 @@ package com.chat.client;
 import java.io.*;
 import java.net.Socket;
 import com.chat.protocol.*;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 public class ReceiveThread extends Thread {
     private Socket socket;
@@ -28,22 +30,28 @@ public class ReceiveThread extends Thread {
                 String content = parts[1];
 
                 if (MessageType.SYS.equals(type)) {
-                    // 不显示“登录成功”这条系统消息
-                    if (!content.equals("登录成功")) {
-                        gui.appendChat(content);
-                    }
-                    if (content.contains("协议错误") || content.contains("昵称已被使用") || content.contains("非法")) {
-                        controller.loginFailed();
-                        break;
-                    }
                     if (content.equals("登录成功")) {
                         controller.loginSuccess();
+                    } else if (content.contains("协议错误") || content.contains("昵称已被使用") || content.contains("非法")) {
+                        controller.loginFailed();
+                        break;
+                    } else if (content.equals("服务器已关闭，连接将断开")) {
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(gui, "服务已关停，群聊室停止营业", "消息", JOptionPane.INFORMATION_MESSAGE);
+                            controller.disconnect();
+                        });
+                        break;
+                    } else {
+                        gui.appendChat(content);
                     }
                 } else if (MessageType.MSG.equals(type)) {
                     gui.appendChat(content);
                 } else if (MessageType.KICK.equals(type)) {
-                    gui.appendChat("系统通知：" + content);
-                    controller.disconnect();
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(gui, "由于你违反群聊纪律，被踢出聊天群", "消息", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(gui, "通信中断，请重新连接", "消息", JOptionPane.INFORMATION_MESSAGE);
+                        controller.kickedDisconnect();
+                    });
                     break;
                 }
             }

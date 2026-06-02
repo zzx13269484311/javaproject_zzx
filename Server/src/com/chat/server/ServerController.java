@@ -73,6 +73,10 @@ public class ServerController {
             gui.appendLog("踢人失败：昵称不能为空");
             return;
         }
+        if ("暂无聊客".equals(nickname)) {
+            gui.appendLog("踢人失败：当前没有在线用户");
+            return;
+        }
         ClientHandler handler = userManager.getHandler(nickname);
         if (handler == null) {
             gui.appendLog("踢人失败：用户 " + nickname + " 不在线");
@@ -80,13 +84,11 @@ public class ServerController {
         }
         // 发送被踢通知
         handler.sendMessage(MessageType.KICK, "您已被管理员踢出聊天室");
-        // 关闭连接并清理资源（handler 内部会关闭 socket 并移除用户）
         handler.setKicked(true);
         handler.close();
         userManager.removeUser(nickname);
-        // 刷新在线列表
         gui.updateUserList(userManager.getAllNicknames());
-        // 广播系统消息
+
         String timestamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
         String sysMsgContent = String.format("【%s,%s】：【因违规被踢出群聊室】", timestamp, nickname);
         String sysMsg = MessageUtil.encode(MessageType.SYS, sysMsgContent);

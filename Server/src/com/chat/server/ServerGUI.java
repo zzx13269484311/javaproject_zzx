@@ -67,6 +67,7 @@ public class ServerGUI extends JFrame {
         userPanel.add(userScroll, BorderLayout.CENTER);
         northComposite.add(userPanel);
 
+        updateUserList(new String[0]);
         add(northComposite, BorderLayout.NORTH);
 
         // 中间日志区域
@@ -122,8 +123,12 @@ public class ServerGUI extends JFrame {
     public void updateUserList(String[] nicknames) {
         SwingUtilities.invokeLater(() -> {
             userListModel.clear();
-            for (String name : nicknames) {
-                userListModel.addElement(name);
+            if (nicknames == null || nicknames.length == 0) {
+                userListModel.addElement("暂无聊客");
+            } else {
+                for (String name : nicknames) {
+                    userListModel.addElement(name);
+                }
             }
         });
     }

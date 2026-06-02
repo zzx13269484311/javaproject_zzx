@@ -4,6 +4,7 @@ import com.chat.protocol.MessageType;
 import com.chat.protocol.MessageUtil;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class PatrolThread extends Thread {
     private UserManager userManager;
@@ -21,21 +22,38 @@ public class PatrolThread extends Thread {
 
     @Override
     public void run() {
+        long lastCheck = System.currentTimeMillis();
         while (!isInterrupted()) {
             try {
-                String encodedMsg = messageQueue.take(); // 阻塞获取
-                String[] parts = MessageUtil.decode(encodedMsg);
-                if (parts.length < 2) continue;
-                String type = parts[0];
-                String content = parts[1];
-
-                // 在服务器 GUI 上显示
-                gui.appendLog(content);
-
-                // 广播给所有在线客户端
-                broadcast(encodedMsg);
+                String encodedMsg = messageQueue.poll(1, TimeUnit.SECONDS);
+                if (encodedMsg != null) {
+                    String[] parts = MessageUtil.decode(encodedMsg);
+                    if (parts.length >= 2) {
+                        String content = parts[1];
+                        gui.appendLog(content);
+                        broadcast(encodedMsg);
+                    }
+                }
+                long now = System.currentTimeMillis();
+                if (now - lastCheck >= 30000) {
+                    lastCheck = now;
+                    checkClientAlive();
+                }
             } catch (InterruptedException e) {
                 break;
+            }
+        }
+    }
+
+    private void checkClientAlive() {
+        for (ClientHandler handler : userManager.getAllHandlers()) {
+            if (!handler.isSocketAlive()) {
+                String nickname = handler.getNickname();
+                handler.close();
+                userManager.removeUser(nickname);
+                gui.updateUserList(userManager.getAllNicknames());
+                String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 异常断开");
+                addMessage(sysMsg);
             }
         }
     }

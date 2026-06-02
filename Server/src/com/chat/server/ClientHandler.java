@@ -6,6 +6,7 @@ import com.chat.protocol.*;
 import com.chat.protocol.MessageUtil;
 import com.chat.protocol.MessageType;
 import java.io.*;
+import javax.swing.SwingUtilities;
 
 
 public class ClientHandler extends Thread {
@@ -78,8 +79,12 @@ public class ClientHandler extends Thread {
                 String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 退出了聊天室");
                 patrolThread.addMessage(sysMsg);
                 userManager.removeUser(nickname);
+                // 刷新在线列表
+                SwingUtilities.invokeLater(() -> {
+                    String[] users = userManager.getAllNicknames();
+                    gui.updateUserList(users);
+                });
             }
-            // 广播下线通知（后续实现）
         }
     }
 
@@ -89,7 +94,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    private void close() {
+    public void close() {
         try {
             if (reader != null) reader.close();
             if (writer != null) writer.close();
@@ -102,4 +107,8 @@ public class ClientHandler extends Thread {
             writer.println(raw);
         }
     }
+    public boolean isSocketAlive() {
+        return socket != null && !socket.isClosed() && socket.isConnected();
+    }
+    public String getNickname() { return nickname; }
 }

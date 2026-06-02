@@ -1,5 +1,7 @@
 package com.chat.server;
 import com.chat.protocol.ProtocolConst;
+import com.chat.protocol.MessageType;
+import com.chat.protocol.MessageUtil;
 import java.net.ServerSocket;
 import java.io.IOException;
 
@@ -38,6 +40,13 @@ public class ServerController {
 
     public void stopServer() {
         isRunning = false;
+        // 广播服务器关闭消息
+        String shutdownMsg = MessageUtil.encode(MessageType.SYS, "服务器已关闭，连接将断开");
+        for (ClientHandler handler : userManager.getAllHandlers()) {
+            handler.sendRawMessage(shutdownMsg);
+            handler.close();
+        }
+        userManager.getAllNicknames(); // 清空（如果需要）
         // 关闭 ServerSocket
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
@@ -47,7 +56,6 @@ public class ServerController {
         // 中断线程
         if (welcomeThread != null) welcomeThread.interrupt();
         if (patrolThread != null) patrolThread.interrupt();
-        // 断开所有客户端连接（稍后实现）
         gui.appendLog("服务器已停止");
         gui.setStartEnabled(true);
     }
@@ -58,6 +66,27 @@ public class ServerController {
     }
 
     public void kickUser() {
-        // 稍后实现
+        String nickname = gui.getKickNickname();
+        if (nickname == null || nickname.trim().isEmpty()) {
+            gui.appendLog("踢人失败：昵称不能为空");
+            return;
+        }
+        ClientHandler handler = userManager.getHandler(nickname);
+        if (handler == null) {
+            gui.appendLog("踢人失败：用户 " + nickname + " 不在线");
+            return;
+        }
+        // 发送被踢通知
+        handler.sendMessage(MessageType.KICK, "您已被管理员踢出聊天室");
+        // 关闭连接并清理资源（handler 内部会关闭 socket 并移除用户）
+        handler.close();
+        userManager.removeUser(nickname);
+        // 刷新在线列表
+        gui.updateUserList(userManager.getAllNicknames());
+        // 广播系统消息
+        String sysMsg = MessageUtil.encode(MessageType.SYS, nickname + " 被管理员踢出聊天室");
+        patrolThread.addMessage(sysMsg);
+        gui.appendLog("管理员踢出了用户：" + nickname);
+        gui.clearKickField();
     }
 }
